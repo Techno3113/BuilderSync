@@ -1,0 +1,49 @@
+{
+  "geode": "5.3.0",
+  "gd": {
+    "win": "2.2074",
+    "mac": "2.2074",
+    "android": "2.2074"
+  },
+  "id": "techno3113.buildersync",
+  "name": "BuilderSync",
+  "version": "v1.0.0",
+  "developer": "Techno3113",
+  "description": "Free open-source live multiplayer level editor for Geometry Dash.",
+  "links": {
+    "source": "https://github.com/Techno3113/BuilderSync"
+  },
+  "dependencies": [
+    {
+      "id": "geode.node-ids",
+      "version": ">=1.0.0",
+      "importance": "required"
+    }
+  ],
+  "settings": {
+    "server-url": {
+      "name": "Relay Server URL",
+      "description": "WebSocket relay server to connect to. Change this to self-host.",
+      "type": "string",
+      "default": "ws://localhost:2999"
+    },
+    "username": {
+      "name": "Display Name",
+      "description": "Your name shown to other collaborators.",
+      "type": "string",
+      "default": "Player"
+    },
+    "cursor-sync": {
+      "name": "Sync Cursor",
+      "description": "Show other players' cursors in the editor.",
+      "type": "bool",
+      "default": true
+    },
+    "show-notifications": {
+      "name": "Join/Leave Notifications",
+      "description": "Show toast when a player joins or leaves.",
+      "type": "bool",
+      "default": true
+    }
+  }
+}
