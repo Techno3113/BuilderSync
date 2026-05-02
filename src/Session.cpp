@@ -56,12 +56,27 @@ void Session::leaveRoom() {
 }
 
 void Session::sendOp(json const& payload) {
-    if (!m_connected) return;
     json out = payload;
     if (!out.contains("code") && !m_roomCode.empty()) {
         out["code"] = m_roomCode;
     }
-    m_ws.send(out.dump());
+    std::string msg = out.dump();
+
+    if (!m_connected) {
+        // Queue for when connection opens
+        std::lock_guard<std::mutex> lock(m_queueMutex);
+        m_sendQueue.push(msg);
+        return;
+    }
+    m_ws.send(msg);
+}
+
+void Session::flushQueue() {
+    std::lock_guard<std::mutex> lock(m_queueMutex);
+    while (!m_sendQueue.empty()) {
+        m_ws.send(m_sendQueue.front());
+        m_sendQueue.pop();
+    }
 }
 
 void Session::sendCursor(float x, float y) {
@@ -75,6 +90,7 @@ void Session::onMessage(ix::WebSocketMessagePtr const& msg) {
     if (msg->type == MsgType::Open) {
         m_connected = true;
         log::info("[BuilderSync] Connected to {}", m_serverUrl);
+        flushQueue();
         return;
     }
     if (msg->type == MsgType::Close || msg->type == MsgType::Error) {

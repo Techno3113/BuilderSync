@@ -5,6 +5,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <queue>
 #include <mutex>
 #include <atomic>
 
@@ -64,6 +65,7 @@ public:
 private:
     Session() = default;
     void onMessage(ix::WebSocketMessagePtr const& msg);
+    void flushQueue();
 
     ix::WebSocket              m_ws;
     std::string                m_serverUrl;
@@ -71,6 +73,10 @@ private:
     std::string                m_localId;
     bool                       m_isHost = false;
     std::atomic<bool>          m_connected{false};
+
+    // Ops queued before the WS Open fires
+    std::queue<std::string>    m_sendQueue;
+    std::mutex                 m_queueMutex;
 
     std::vector<ConnectedUser> m_users;
     std::mutex                 m_usersMutex;

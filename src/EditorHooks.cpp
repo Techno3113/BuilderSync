@@ -30,7 +30,7 @@ class $modify(BSEditorLayer, LevelEditorLayer) {
         s->onPlace = [this](json const& pkt) {
             RemoteGuard g;
             std::string data = pkt.value("data", "");
-            if (!data.empty()) addObjectFromString(data);
+            if (!data.empty()) createObjectFromString(data);
         };
 
         // ── Incoming: delete ──────────────────────────────────────────────
@@ -75,9 +75,12 @@ class $modify(BSEditorLayer, LevelEditorLayer) {
         // ── Incoming: full level sync (late join) ─────────────────────────
         s->onLevelSync = [this](std::string const& levelData) {
             RemoteGuard g;
-            m_objects->removeAllObjects();
-            loadLevelData(levelData.c_str());
-            log::info("[BuilderSync] Level synced from host.");
+            // TODO: full level reload requires re-initialising the editor.
+            // For now, log the sync so we know it arrived. A proper impl
+            // would call LevelEditorLayer::init() with updated m_level->m_levelString,
+            // or use GJGameLevel::setLevelString and reload the scene.
+            log::warn("[BuilderSync] Level sync received ({} bytes) — full reload not yet implemented.",
+                levelData.size());
         };
 
         // ── Incoming: cursor ──────────────────────────────────────────────
@@ -107,15 +110,16 @@ class $modify(BSEditorLayer, LevelEditorLayer) {
     }
 
     // ── Outgoing: place ───────────────────────────────────────────────────────
-    bool addObjectFromString(gd::string str) {
-        bool ok = LevelEditorLayer::addObjectFromString(str);
-        if (!s_applyingRemote && Session::get()->isConnected()) {
+    // GD 2.2074 uses createObjectFromString (addObjectFromString in older versions)
+    GameObject* createObjectFromString(gd::string str) {
+        auto* obj = LevelEditorLayer::createObjectFromString(str);
+        if (obj && !s_applyingRemote && Session::get()->isConnected()) {
             Session::get()->sendOp({
                 {"op",   "place"},
                 {"data", std::string(str)}
             });
         }
-        return ok;
+        return obj;
     }
 
     // ── Outgoing: delete ──────────────────────────────────────────────────────
@@ -163,7 +167,8 @@ class $modify(BSEditorUI, EditorUI) {
     bool init(LevelEditorLayer* lel) {
         if (!EditorUI::init(lel)) return false;
 
-        NodeIDs::provideFor(this);
+        // node-ids: assign stable IDs to all children of EditorUI
+        if (auto* ids = NodeIDs::get()) ids->provide(this);
 
         // Use the undo-menu row — stable ID provided by node-ids
         auto* menu = this->getChildByID("undo-menu");
@@ -191,7 +196,8 @@ class $modify(BSPauseLayer, EditorPauseLayer) {
     bool init(LevelEditorLayer* el) {
         if (!EditorPauseLayer::init(el)) return false;
 
-        NodeIDs::provideFor(this);
+        // node-ids: assign stable IDs to all children of EditorPauseLayer
+        if (auto* ids = NodeIDs::get()) ids->provide(this);
 
         auto* menu = this->getChildByID("settings-menu");
         if (!menu) return true;

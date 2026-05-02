@@ -169,23 +169,19 @@ void BuilderSyncUsersPopup::buildList() {
         return;
     }
 
-    auto* col = CCMenu::create();
-    col->setLayout(ColumnLayout::create()
-        ->setGap(6.f)
-        ->setAxisReverse(true)
-        ->setAxisAlignment(AxisAlignment::End));
+    auto* col = CCNode::create();
     col->setContentSize({240.f, 260.f});
+    float yPos = 240.f; // start near top, step down
 
     for (auto const& u : users) {
-        auto* row = CCMenu::create();
-        row->setLayout(RowLayout::create()
-            ->setGap(8.f)
-            ->setAxisAlignment(AxisAlignment::Start));
-        row->setContentWidth(230.f);
+        // Use a plain CCNode row — CCMenu only accepts CCMenuItem children
+        auto* row = CCNode::create();
+        row->setContentSize({230.f, 20.f});
 
         // Colour dot
         auto* dot = CCLayerColor::create(
             {u.color.r, u.color.g, u.color.b, 255}, 10.f, 10.f);
+        dot->setPosition({4.f, 5.f});
         row->addChild(dot);
 
         bool isMe = u.id == Session::get()->getLocalId();
@@ -194,9 +190,12 @@ void BuilderSyncUsersPopup::buildList() {
 
         auto* nameLabel = CCLabelBMFont::create(label.c_str(), "chatFont.fnt");
         nameLabel->setScale(0.6f);
+        nameLabel->setAnchorPoint({0.f, 0.5f});
+        nameLabel->setPosition({20.f, 10.f});
         row->addChild(nameLabel);
 
-        row->updateLayout();
+        row->setPosition({0.f, yPos});
+        yPos -= 26.f;
         col->addChild(row);
     }
 

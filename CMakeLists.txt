@@ -40,7 +40,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE src/)
 target_link_libraries(${PROJECT_NAME}
     geode-sdk
     nlohmann_json::nlohmann_json
-    ixwebsocket
+    IXWebSocket::IXWebSocket
 )
 
 setup_geode_mod(${PROJECT_NAME})
